@@ -14,7 +14,7 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-$gxuz5dhzs^wfi4g@nm$2y*e81
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['51.250.25.211', '127.0.0.1', 'localhost', 'foodgramtest.ddns.net']
+ALLOWED_HOSTS = ['51.250.25.211', '127.0.0.1', 'localhost', 'taskitest.ddns.net;']
 
 
 # Application definition

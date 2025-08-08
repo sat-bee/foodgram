@@ -1,5 +1,3 @@
-# python manage.py makemigrations
-# python manage.py migrate
 python manage.py collectstatic
 cp -r /app/docs/. /app/collected_static/docs/
 cp -r /app/collected_static/. /static/backend_static/
