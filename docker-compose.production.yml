@@ -33,7 +33,7 @@ services:
     image: satbee/foodgram_proxy
     env_file: .env
     ports:
-      - "80:80"
+      - "8000:80"
     volumes:
       - static:/static
       - media:/media
