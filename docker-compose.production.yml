@@ -28,7 +28,7 @@ services:
     command: cp -r /app/build/. /frontend_static/
     volumes:
       - static:/frontend_static
-  nginx:
+  proxy:
     container_name: foodgram-proxy
     image: satbee/foodgram_proxy
     env_file: .env
