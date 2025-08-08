@@ -249,6 +249,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
 
 class SubscriptionViewSet(viewsets.ModelViewSet):
+    queryset = Subscription.objects.all().order_by('-id')
     serializer_class = SubscriptionSerializer
     pagination_class = LimitPageNumberPagination
 
