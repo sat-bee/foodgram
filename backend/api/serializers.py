@@ -1,13 +1,13 @@
 import base64
 
 from django.core.files.base import ContentFile
-from recipes.models import (Cart, Favorite, Ingredient, Recipe,
-                            RecipeIngredient, Subscription, Tag)
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 
+from api.validators import username_validator
+from recipes.models import (Cart, Favorite, Ingredient, Recipe,
+                            RecipeIngredient, Subscription, Tag)
 from users.models import User
-from .validators import username_validator
 
 
 class Base64ImageField(serializers.ImageField):
@@ -211,8 +211,8 @@ class RecipeSerializer(serializers.ModelSerializer):
         return instance
 
     def _set_ingredients_and_tags(self, recipe, ingredients_data, tags_data):
-        if recipe.recipeingredient_set.exists():
-            recipe.recipeingredient_set.all().delete()
+        if recipe.recipe_ingredients.exists():
+            recipe.recipe_ingredients.all().delete()
         recipe_ingredients = (
             RecipeIngredient(
                 recipe=recipe,
@@ -238,7 +238,7 @@ class RecipeSerializer(serializers.ModelSerializer):
                 recipe_ingredient,
                 context=self.context
             ).data
-            for recipe_ingredient in instance.recipeingredient_set.all()
+            for recipe_ingredient in instance.recipe_ingredients.all()
         )
         return representation
 

@@ -6,8 +6,6 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser import views as djoser_views
-from recipes.models import (Cart, Favorite, Ingredient, Recipe,
-                            RecipeIngredient, Subscription, Tag)
 from rest_framework import generics, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
@@ -15,13 +13,16 @@ from rest_framework.permissions import (AllowAny, IsAuthenticated,
                                         IsAuthenticatedOrReadOnly)
 from rest_framework.response import Response
 
+from api.filters import IngredientsFilter, RecipeFilter
+from api.permissions import OwnerOrReadOnly
+from api.serializers import (CartSerializer, FavoriteSerializer,
+                             IngredientSerializer, RecipeSerializer,
+                             SubscriptionRecipeSerializer,
+                             SubscriptionSerializer,
+                             TagSerializer, UserSerializer)
+from recipes.models import (Cart, Favorite, Ingredient, Recipe,
+                            RecipeIngredient, Subscription, Tag)
 from users.models import User
-from .filters import IngredientsFilter, RecipeFilter
-from .permissions import OwnerOrReadOnly
-from .serializers import (CartSerializer, FavoriteSerializer,
-                          IngredientSerializer, RecipeSerializer,
-                          SubscriptionRecipeSerializer, SubscriptionSerializer,
-                          TagSerializer, UserSerializer)
 
 
 class LimitPageNumberPagination(PageNumberPagination):
@@ -53,7 +54,7 @@ class UserAvatarUpdateView(generics.UpdateAPIView):
         if not request.data or 'avatar' not in request.data:
             return Response(
                 {'error': 'Avatar field is required.'},
-                status=400
+                status=status.HTTP_400_BAD_REQUEST
             )
         serializer = self.get_serializer(
             self.object, data=request.data,
@@ -66,15 +67,19 @@ class UserAvatarUpdateView(generics.UpdateAPIView):
         )
 
     def delete(self, request, *args, **kwargs):
-        self.object = self.get_object()
-        if self.object.avatar:
-            self.object.avatar.delete(save=False)
-            self.object.save()
+        user = self.get_object()
+        if user.avatar:
+            user.avatar = ''
+            user.save()
             return Response(
-                {'message': 'Avatar deleted successfully.'},
-                status=204
+                {'detail': 'Avatar deleted successfully.'},
+                status=status.HTTP_204_NO_CONTENT
             )
-        return Response({'message': 'No avatar to delete.'}, status=404)
+
+        return Response(
+            {'detail': 'No avatar found to delete.'},
+            status=status.HTTP_404_NOT_FOUND
+        )
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
@@ -106,21 +111,22 @@ class RecipeViewSet(viewsets.ModelViewSet):
     filterset_class = RecipeFilter
 
     def perform_create(self, serializer):
-        serializer.save(author=self.request.user)
+        recipe = serializer.save(author=self.request.user)
+        recipe.link = self.generate_short_link()
+        recipe.save()
 
     @action(detail=True, methods=['get'], url_path='get-link')
     def get_short_link(self, request, pk=None):
         recipe = self.get_object()
-
-        if recipe.link == '':
-            recipe.link = self.generate_short_link()
-            recipe.save()
-
-        short_link = f'https://taskitest.ddns.net{recipe.link}'
+        short_link = (
+            f'https://taskitest.ddns.net{recipe.link}'
+            if recipe.link
+            else None
+        )
         return Response({'short-link': short_link}, status=status.HTTP_200_OK)
 
     def generate_short_link(self):
-        length = 6  # Length of the generated string
+        length = 6
         characters = f'{string.ascii_letters}{string.digits}'
         while True:
             new_link = '/s/' + ''.join(random.choices(characters, k=length))
@@ -136,6 +142,16 @@ class RecipeViewSet(viewsets.ModelViewSet):
             .values('ingredient__name', 'ingredient__measurement_unit')
             .annotate(total_amount=Sum('amount'))
         )
+        shopping_cart_content = self.create_shopping_cart_response(ingredients)
+        response = HttpResponse(
+            shopping_cart_content, content_type='text/plain'
+        )
+        response['Content-Disposition'] = (
+            'attachment; filename="shopping_cart.txt"'
+        )
+        return response
+
+    def create_shopping_cart_response(self, ingredients):
         ingredients_dict = {
             item['ingredient__name']: {
                 'measurement_unit': item['ingredient__measurement_unit'],
@@ -143,22 +159,16 @@ class RecipeViewSet(viewsets.ModelViewSet):
             }
             for item in ingredients
         }
-        return self.create_shopping_cart_response(ingredients_dict)
-
-    def create_shopping_cart_response(self, ingredients_dict):
-        response = HttpResponse(content_type='text/plain')
-        response['Content-Disposition'] = (
-            'attachment; filename="shopping_cart.txt"'
-        )
+        formatted_response = []
         for name, details in ingredients_dict.items():
-            response.write(
-                '{} ({}) - {}\n'.format(
+            formatted_response.append(
+                '{} ({}) - {}'.format(
                     name,
                     details['measurement_unit'],
                     details['amount']
                 )
             )
-        return response
+        return '\n'.join(formatted_response)
 
     def manage_item(
         self,
@@ -199,14 +209,14 @@ class RecipeViewSet(viewsets.ModelViewSet):
             )
 
         elif request.method == 'DELETE':
-            if not queryset.exists():
+            deleted_count, _ = queryset.delete()
+            if deleted_count == 0:
                 return Response(
                     {'detail': (
                         f'Recipe is not in the {model_class.__name__.lower()}.'
                     )},
                     status=status.HTTP_400_BAD_REQUEST
                 )
-            queryset.delete()
             return Response(
                 {'detail': (
                     f'Recipe removed from the {model_class.__name__.lower()}.'
@@ -244,7 +254,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
 
 class SubscriptionViewSet(viewsets.ModelViewSet):
-    queryset = Subscription.objects.all()
     serializer_class = SubscriptionSerializer
     pagination_class = LimitPageNumberPagination
 
