@@ -1,13 +1,13 @@
 from django_filters import rest_framework as filters
 
-from recipes.models import Ingredients, Recipe, Tags, Cart, Favorite
+from recipes.models import Cart, Favorite, Ingredient, Recipe, Tag
 
 
 class IngredientsFilter(filters.FilterSet):
     name = filters.CharFilter(lookup_expr='startswith')
 
     class Meta:
-        model = Ingredients
+        model = Ingredient
         fields = ('name',)
 
 
@@ -15,7 +15,7 @@ class RecipeFilter(filters.FilterSet):
     author = filters.NumberFilter(field_name='author', lookup_expr='exact')
     tags = filters.ModelMultipleChoiceFilter(
         field_name='tags__slug',
-        queryset=Tags.objects.all(),
+        queryset=Tag.objects.all(),
         to_field_name='slug'
     )
     is_in_shopping_cart = filters.BooleanFilter(

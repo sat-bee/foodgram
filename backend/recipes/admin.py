@@ -1,23 +1,16 @@
 from django.contrib import admin
-from .models import (
-    Tags,
-    Ingredients,
-    Recipe,
-    RecipeIngredient,
-    Subscription,
-    Cart,
-    Favorite,
-    Shortcut
-)
+
+from .models import (Cart, Favorite, Ingredient, Recipe, RecipeIngredient,
+                     Subscription, Tag)
 
 
-@admin.register(Tags)
+@admin.register(Tag)
 class TagsAdmin(admin.ModelAdmin):
     list_display = ('name', 'slug')
     search_fields = ('name',)
 
 
-@admin.register(Ingredients)
+@admin.register(Ingredient)
 class IngredientsAdmin(admin.ModelAdmin):
     list_display = ('name', 'measurement_unit')
     search_fields = ('name',)
@@ -52,9 +45,3 @@ class CartAdmin(admin.ModelAdmin):
 class FavoriteAdmin(admin.ModelAdmin):
     list_display = ('user', 'recipe')
     search_fields = ('user__username', 'recipe__name')
-
-
-@admin.register(Shortcut)
-class ShortcutAdmin(admin.ModelAdmin):
-    list_display = ('recipe', 'link')
-    search_fields = ('recipe__name',)

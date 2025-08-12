@@ -12,10 +12,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-gxuz5dhzs^wfi4g@nm$2y*e81hh4r@mmhh1k14ab$*z(j8)!b')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = os.getenv('DEBUG', 'False')
 
-ALLOWED_HOSTS = ['51.250.25.211', '127.0.0.1', 'localhost', 'taskitest.ddns.net']
-
+# ALLOWED_HOSTS = ['51.250.25.211', '127.0.0.1', 'localhost', 'taskitest.ddns.net']
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '51.250.25.211,127.0.0.1,localhost,taskitest.ddns.net').split(',')
 
 # Application definition
 
@@ -26,13 +26,13 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'users.apps.UsersConfig',
-    'api.apps.ApiConfig',
-    'recipes.apps.RecipesConfig',
     'rest_framework',
     'django_filters',
     'rest_framework.authtoken',
-    'djoser'
+    'djoser',
+    'api.apps.ApiConfig',
+    'recipes.apps.RecipesConfig',
+    'users.apps.UsersConfig',
 ]
 
 MIDDLEWARE = [
