@@ -45,7 +45,7 @@ class Ingredient(models.Model):
         verbose_name_plural = 'Ингредиенты'
 
     def __str__(self):
-        return self.name
+        return f"{self.name} ({self.measurement_unit})"
 
 
 class Recipe(models.Model):
@@ -56,7 +56,7 @@ class Recipe(models.Model):
         related_name='recipe',
     )
     author = models.ForeignKey(
-        User, related_name='recipe',
+        User, related_name='recipes',
         on_delete=models.CASCADE,
         verbose_name='Автор',
     )
@@ -73,8 +73,7 @@ class Recipe(models.Model):
     image = models.ImageField(
         verbose_name='изображение',
         upload_to='recipes/images/',
-        null=True,
-        default=None
+        default=''
     )
     text = models.TextField(
         verbose_name='Текст',
@@ -99,7 +98,7 @@ class Recipe(models.Model):
         ordering = ['-created_at']
 
     def __str__(self):
-        return self.name
+        return f"{self.name} - {self.author.username}"
 
 
 class RecipeIngredient(models.Model):
@@ -124,15 +123,23 @@ class RecipeIngredient(models.Model):
         verbose_name = 'Ингредиенты в рецепте'
         verbose_name_plural = 'Ингредиенты в рецепте'
 
+    def __str__(self):
+        return (
+            f"{self.recipe.name} - "
+            f"{self.ingredient.name} "
+            f"{self.amount} "
+            f"{self.ingredient.measurement_unit}"
+        )
+
 
 class Subscription(models.Model):
     author = models.ForeignKey(
-        User, related_name='subscription',
+        User, related_name='subscriptions',
         on_delete=models.CASCADE,
         verbose_name='автор',
     )
     user = models.ForeignKey(
-        User, related_name='subscriber',
+        User, related_name='subscribers',
         on_delete=models.CASCADE,
         verbose_name='подписчик',
     )
@@ -148,15 +155,18 @@ class Subscription(models.Model):
         verbose_name = 'Подписка'
         verbose_name_plural = 'Подписки'
 
+    def __str__(self):
+        return f"{self.user.username} подписан на {self.author.username}"
+
 
 class Cart(models.Model):
     user = models.ForeignKey(
-        User, related_name='cart',
+        User, related_name='carts',
         on_delete=models.CASCADE,
         verbose_name='пользователь',
     )
     recipe = models.ForeignKey(
-        Recipe, related_name='cart',
+        Recipe, related_name='carts',
         on_delete=models.CASCADE,
         verbose_name='рецепт',
     )
@@ -165,15 +175,18 @@ class Cart(models.Model):
         verbose_name = 'Карзина покупок'
         verbose_name_plural = 'Карзины покупок'
 
+    def __str__(self):
+        return f"{self.user.username} - {self.recipe.name}"
+
 
 class Favorite(models.Model):
     user = models.ForeignKey(
-        User, related_name='favorite',
+        User, related_name='favorites',
         on_delete=models.CASCADE,
         verbose_name='пользователь',
     )
     recipe = models.ForeignKey(
-        Recipe, related_name='favorite',
+        Recipe, related_name='favorites',
         on_delete=models.CASCADE,
         verbose_name='рецепт',
     )
@@ -181,3 +194,6 @@ class Favorite(models.Model):
     class Meta:
         verbose_name = 'Избранное'
         verbose_name_plural = 'Избранное'
+
+    def __str__(self):
+        return f"{self.user.username} - {self.recipe.name}"

@@ -1,6 +1,11 @@
 #  Foodgram: управление рецептами.
 [![Main Foodgram workflow](https://github.com/sat-bee/foodgram/actions/workflows/main.yml/badge.svg)](https://github.com/sat-bee/foodgram/actions/workflows/main.yml)
 
+https://taskitest.ddns.net
+51.250.25.211
+admin@admin.admin
+admin
+
 ## Описание.
 
 Foodgram - платфома позволяющая размещать рецепты, подписываться на авторов рецептов, заносить рецепты в избранное и формировать общий список покупок по выброным рецептам.

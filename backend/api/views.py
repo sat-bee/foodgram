@@ -1,6 +1,7 @@
 import random
 import string
 
+from django.conf import settings
 from django.db.models import Count, Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
@@ -27,7 +28,7 @@ from users.models import User
 
 class LimitPageNumberPagination(PageNumberPagination):
     page_size_query_param = 'limit'
-    max_page_size = 6
+    max_page_size = settings.MAX_PAGE_SIZE
 
 
 class UserViewSet(djoser_views.UserViewSet):
@@ -69,8 +70,7 @@ class UserAvatarUpdateView(generics.UpdateAPIView):
     def delete(self, request, *args, **kwargs):
         user = self.get_object()
         if user.avatar:
-            user.avatar = ''
-            user.save()
+            user.avatar.delete(save=True)
             return Response(
                 {'detail': 'Avatar deleted successfully.'},
                 status=status.HTTP_204_NO_CONTENT
@@ -138,7 +138,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         user = request.user
         ingredients = (
             RecipeIngredient.objects
-            .filter(recipe__cart__user=user)
+            .filter(recipe__carts__user=user)
             .values('ingredient__name', 'ingredient__measurement_unit')
             .annotate(total_amount=Sum('amount'))
         )
@@ -260,7 +260,8 @@ class SubscriptionViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return (
             Subscription.objects
-            .annotate(recipes_count=Count('author__recipe'))
+            .annotate(recipes_count=Count('author__recipes'))
+            .filter(user=self.request.user)
         )
 
     def create(self, request, *args, **kwargs):
@@ -272,9 +273,7 @@ class SubscriptionViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def list(self, request):
-        current_user = request.user
-        subscriptions = Subscription.objects.filter(user=current_user)
-
+        subscriptions = self.get_queryset()
         paginator = self.pagination_class()
         paginated_subscriptions = paginator.paginate_queryset(
             subscriptions, request
@@ -289,20 +288,12 @@ class SubscriptionViewSet(viewsets.ModelViewSet):
 
     def destroy(self, request, *args, **kwargs):
         author_id = kwargs.get('user_id')
-        try:
-            author = User.objects.get(id=author_id)
-            subscription = (
-                Subscription.objects
-                .get(user=request.user, author=author)
-            )
-            subscription.delete()
+        author = get_object_or_404(User, id=author_id)
+        subscriptions = self.get_queryset().filter(author=author)
+        if subscriptions.exists():
+            subscriptions.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
-        except User.DoesNotExist:
-            return Response(
-                {'error': 'User not found.'},
-                status=status.HTTP_404_NOT_FOUND
-            )
-        except Subscription.DoesNotExist:
+        else:
             return Response(
                 {'error': 'Subscription not found.'},
                 status=status.HTTP_400_BAD_REQUEST
