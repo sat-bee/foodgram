@@ -45,15 +45,14 @@ class Ingredient(models.Model):
         verbose_name_plural = 'Ингредиенты'
 
     def __str__(self):
-        return f"{self.name} ({self.measurement_unit})"
+        return f'{self.name} ({self.measurement_unit})'
 
 
 class Recipe(models.Model):
     tags = models.ManyToManyField(
         Tag,
         verbose_name='тег',
-        help_text='',
-        related_name='recipe',
+        related_name='recipes',
     )
     author = models.ForeignKey(
         User, related_name='recipes',
@@ -98,7 +97,7 @@ class Recipe(models.Model):
         ordering = ['-created_at']
 
     def __str__(self):
-        return f"{self.name} - {self.author.username}"
+        return f'{self.name} - {self.author.username}'
 
 
 class RecipeIngredient(models.Model):
@@ -125,10 +124,10 @@ class RecipeIngredient(models.Model):
 
     def __str__(self):
         return (
-            f"{self.recipe.name} - "
-            f"{self.ingredient.name} "
-            f"{self.amount} "
-            f"{self.ingredient.measurement_unit}"
+            f'{self.recipe.name} - '
+            f'{self.ingredient.name} '
+            f'{self.amount} '
+            f'{self.ingredient.measurement_unit}'
         )
 
 
@@ -156,7 +155,7 @@ class Subscription(models.Model):
         verbose_name_plural = 'Подписки'
 
     def __str__(self):
-        return f"{self.user.username} подписан на {self.author.username}"
+        return f'{self.user.username} подписан на {self.author.username}'
 
 
 class Cart(models.Model):
@@ -176,7 +175,7 @@ class Cart(models.Model):
         verbose_name_plural = 'Карзины покупок'
 
     def __str__(self):
-        return f"{self.user.username} - {self.recipe.name}"
+        return f'{self.user.username} - {self.recipe.name}'
 
 
 class Favorite(models.Model):
@@ -196,4 +195,4 @@ class Favorite(models.Model):
         verbose_name_plural = 'Избранное'
 
     def __str__(self):
-        return f"{self.user.username} - {self.recipe.name}"
+        return f'{self.user.username} - {self.recipe.name}'

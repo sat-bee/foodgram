@@ -290,11 +290,12 @@ class SubscriptionViewSet(viewsets.ModelViewSet):
         author_id = kwargs.get('user_id')
         author = get_object_or_404(User, id=author_id)
         subscriptions = self.get_queryset().filter(author=author)
-        if subscriptions.exists():
-            subscriptions.delete()
+
+        deleted_count, _ = subscriptions.delete()
+        if deleted_count > 0:
             return Response(status=status.HTTP_204_NO_CONTENT)
-        else:
-            return Response(
-                {'error': 'Subscription not found.'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+
+        return Response(
+            {'error': 'Subscription not found.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
