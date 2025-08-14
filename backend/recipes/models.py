@@ -62,8 +62,7 @@ class Recipe(models.Model):
     ingredients = models.ManyToManyField(
         Ingredient,
         verbose_name='ингридиент',
-        help_text='',
-        related_name='recipe',
+        related_name='recipes',
     )
     name = models.CharField(
         max_length=256,

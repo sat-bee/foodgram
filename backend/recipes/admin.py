@@ -22,6 +22,15 @@ class RecipeAdmin(admin.ModelAdmin):
     search_fields = ('name', 'author__username')
     list_filter = ('tags',)
 
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        queryset = (
+            queryset
+            .select_related('author')
+            .prefetch_related('tags', 'ingredients')
+        )
+        return queryset
+
 
 @admin.register(RecipeIngredient)
 class RecipeIngredientAdmin(admin.ModelAdmin):
@@ -34,14 +43,29 @@ class SubscriptionAdmin(admin.ModelAdmin):
     list_display = ('user', 'author')
     search_fields = ('user__username', 'author__username')
 
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        queryset = queryset.select_related('user', 'author')
+        return queryset
+
 
 @admin.register(Cart)
 class CartAdmin(admin.ModelAdmin):
     list_display = ('user', 'recipe')
     search_fields = ('user__username', 'recipe__name')
 
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        queryset = queryset.select_related('user').prefetch_related('recipe')
+        return queryset
+
 
 @admin.register(Favorite)
 class FavoriteAdmin(admin.ModelAdmin):
     list_display = ('user', 'recipe')
     search_fields = ('user__username', 'recipe__name')
+
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        queryset = queryset.select_related('user').prefetch_related('recipe')
+        return queryset
