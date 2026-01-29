@@ -1,5 +1,4 @@
 #  Foodgram: управление рецептами.
-[![Main Foodgram workflow](https://github.com/sat-bee/foodgram/actions/workflows/main.yml/badge.svg)](https://github.com/sat-bee/foodgram/actions/workflows/main.yml)
 
 ## Описание.
 
